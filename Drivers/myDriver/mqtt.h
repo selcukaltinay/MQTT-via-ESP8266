@@ -21,16 +21,18 @@ UART_HandleTypeDef *ESP8266_Uart_t;
   *
   */
 
-#define CWMODE "AT+CWMODE=1\r\n"
-#define CWMODE_Length strlen(CWMODE)
-#define CWQAP "AT+CWQAP\r\n"
-#define CWQAP_Length strlen(CWQAP)
-#define CIPCLOSE "AT+CIPCLOSE\r\n"
-#define CIPCLOSE_Length strlen("AT+CIPCLOSE\r\n")
-#define CIPMUX "AT+CIPMUX=0\r\n"
-#define CIPMUX_Length strlen("AT+CIPMUX=0\r\n")
-#define CIFSR "AT+CIFSR\r\n"
-#define CIFSR_Length strlen("AT+CIFSR\r\n")
+#define CWMODE 				"AT+CWMODE=1\r\n"
+#define CWMODE_Length 		strlen(CWMODE)
+#define CWQAP 				"AT+CWQAP\r\n"
+#define CWQAP_Length 		strlen(CWQAP)
+#define CIPCLOSE 			"AT+CIPCLOSE\r\n"
+#define CIPCLOSE_Length 	strlen(CIPCLOSE)
+#define CIPMUX 				"AT+CIPMUX=0\r\n"
+#define CIPMUX_Length 		strlen(CIPMUX)
+#define CIFSR 				"AT+CIFSR\r\n"
+#define CIFSR_Length 		strlen(CIFSR)
+#define CIPSEND 			"AT+CIPSEND="
+#define CIPSEND_Length 		strlen(CIPSEND)
 
 /*
  * MQTT_Init_Connection_MACROS
@@ -54,12 +56,54 @@ UART_HandleTypeDef *ESP8266_Uart_t;
 
 
 /**
+  * MQTT connection frame
+  * This frame will be send over TCP/IP
+  *
+  */
+
+typedef struct{
+	uint8_t Connect;				// Connect and Remain Length Bytes(2byte) named as "Fixed Header".
+	uint8_t RemainLength;			// Remained Length is hex format of remained byte number after this byte.
+	uint8_t ProtocolNameLength[2]; // 16 bit length of protocol name. For MQTT, this variable setted as 0x04.
+	char ProtocolName[4];		// For us, "MQTT".
+	uint8_t Level;					// 0x04.
+	uint8_t Flag;					// Connect Flag Bits. For unsafety connection, use 0x02. @tag MQTT_TypeDef_Flag_MACROS
+	uint16_t KeepAlive;				// By Default 60.
+	uint16_t ClientIDLength;		// This one will be user defined. Client ID Length.
+	char *ClientID;				// Client ID. User Defined.
+}MQTT_TypeDef_t;
+
+
+
+
+/**
+  * MQTT init type definition
+  *
+  */
+
+typedef struct{
+	uint8_t ConnectionType; // This parameter can be used for select connection type. @tag MQTT_Init_Connection_MACROS
+	uint16_t KeepAlive; 	 // This parameter can be used for determine keep alive duration. By default 60.
+	uint8_t QoS;			 // This parameter can be used for determine Quality of Services. As a parameter, it can be use 0,1 and 2. (0x00 for test)
+	uint8_t Flag;			 //Connect Flag Bits. For unsafety connection, use 0x02. @tag MQTT_TypeDef_Flag_MACROS
+	char* ClientID;
+}MQTT_InitTypeDef_t;
+
+
+/**
   * @brief  To use this library, we should use this function firstly.
   * @param  UART_HandleTypeDef.
   * @retval void.
   */
 void ESP8266_Init(UART_HandleTypeDef *_huart);
 
+
+/**
+  * @brief  This function assign the MQTT_InitTypeDef_t parameter through
+  * @param  UART_HandleTypeDef.
+  * @retval void.
+  */
+void MQTT_Init(MQTT_InitTypeDef_t *MQTT_Init);
 
 
 /**
@@ -80,37 +124,6 @@ void Wifi_Connect(char *SSID, char *pwd);
 
 
 /**
-  * MQTT connection frame
-  * This frame will be send over TCP/IP
-  *
-  */
-
-typedef struct{
-	char Connect;				// Connect and Remain Length Bytes(2byte) named as "Fixed Header".
-	char RemainLength;			// Remained Length is hex format of remained byte number after this byte.
-	char ProtocolNameLength[2]; // 16 bit length of protocol name. For MQTT, this variable setted as 0x04.
-	char ProtocolName[4];		// For us, "MQTT".
-	char Level;					// 0x04.
-	char Flag;					// Connect Flag Bits. For unsafety connection, use 0x02. @tag MQTT_TypeDef_Flag_MACROS
-	char KeepAlive;				// By Default 60.
-	char ClientIDLength[2];		// This one will be user defined. Client ID Length.
-	char *ClientID;				// Client ID. User Defined.
-}MQTT_TypeDef_t;
-
-
-/**
-  * MQTT init type definition
-  *
-  */
-
-typedef struct{
-	char ConnectionType; // This parameter can be used for select connection type. @tag MQTT_Init_Connection_MACROS
-	char KeepAlive; 	 // This parameter can be used for determine keep alive duration. By default 60.
-	char QoS;			 // This parameter can be used for determine Quality of Services.
-	char Flag;			 //Connect Flag Bits. For unsafety connection, use 0x02. @tag MQTT_TypeDef_Flag_MACROS
-}MQTT_InitTypeDef_t;
-
-/**
   * @brief  This function can used for connect mqtt broker.
   * @param  Ip address of mqtt broker.
   * @param  Port number of mqtt broker.
@@ -118,6 +131,14 @@ typedef struct{
   */
 void MQTT_ConnectBroker(char *Ip ,char *Port);
 
+
+/**
+  * @brief  This will be used for connect broker api.
+  * @param  Ip address of mqtt broker.
+  * @param  Port number of mqtt broker.
+  * @retval void.
+  */
+void ESP8266_TcpConnect(char *Ip ,char *Port);
 
 
 

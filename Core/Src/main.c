@@ -91,6 +91,17 @@ int main(void)
   /* USER CODE BEGIN 2 */
   ESP8266_Init(&huart1);
   Wifi_Connect("Satech","Erisilmiyor12");
+
+  MQTT_InitTypeDef_t MQTT_InitStructure;
+  char* mqttClientId = "selcuk";
+  MQTT_InitStructure.ConnectionType=MQTT_Connect;
+  MQTT_InitStructure.QoS=0x00;
+  MQTT_InitStructure.Flag=0x02;
+  MQTT_InitStructure.KeepAlive=60;
+  MQTT_InitStructure.ClientID=mqttClientId;
+  MQTT_Init(&MQTT_InitStructure);
+
+  MQTT_ConnectBroker("broker.mqttdashboard.com","8080");
   /* USER CODE END 2 */
 
   /* Infinite loop */
